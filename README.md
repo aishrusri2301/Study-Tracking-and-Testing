@@ -23,87 +23,110 @@ StudySpark is a full-stack AI-powered learning companion for school students. Th
 - Study Buddy chatbot endpoint that answers in the context of the current topic.
 - Pastel responsive UI with rounded cards, loading states, voice reading, favorites, dark mode, printable reports, and accessible form controls.
 
+## Tech Stack
+
+- Frontend: React 18, TypeScript, Vite, Framer Motion, Recharts, Lucide icons.
+- Backend: Express, TypeScript, Zod, JWT auth, OpenAI-compatible AI service.
+- Database schema: Prisma with SQLite by default; PostgreSQL-ready for production.
+
 ## Backend Architecture
 
 ```text
 server/
-├── index.ts                       # Express app and error handler
-├── middleware/auth.ts             # JWT helpers and optional anonymous student mode
+├── index.ts
+├── middleware/auth.ts
 ├── routes/
-│   ├── auth.ts                    # Persistent register/login
-│   ├── learning.ts                # Resource, quiz, grading, and buddy workflows
-│   └── analytics.ts               # Student and parent progress data
+│   ├── auth.ts
+│   ├── learning.ts
+│   └── analytics.ts
 └── services/
-    ├── analyticsService.ts        # Dynamic dashboard/report-card aggregation
-    ├── gradingService.ts          # MCQ + semantic short-answer grading
-    ├── quizService.ts             # AI/fallback quiz generation from resources
-    ├── recommendationEngine.ts    # Improvement plans and readings
-    ├── resourceService.ts         # Public resource search, summaries, ranking
-    ├── store.ts                   # JSON persistence layer
-    └── textUtils.ts               # Keywords, scoring helpers, stable IDs
+    ├── analyticsService.ts
+    ├── gradingService.ts
+    ├── quizService.ts
+    ├── recommendationEngine.ts
+    ├── resourceService.ts
+    ├── store.ts
+    └── textUtils.ts
 ```
 
 ## Database Model
 
-The Prisma schema includes production-ready tables for:
+The Prisma schema includes:
 
-- `User`
-- `TopicStudied`
-- `SubjectPerformance`
-- `GeneratedQuiz`
-- `QuizAttempt`
-- `AiEvaluation`
-- `ResourceHistory`
-- `ImprovementPlan`
-- `FavoriteResource`
+- User
+- TopicStudied
+- SubjectPerformance
+- GeneratedQuiz
+- QuizAttempt
+- AiEvaluation
+- ResourceHistory
+- ImprovementPlan
+- FavoriteResource
 
-For local dependency-light persistence, the current API writes to `server/data/store.json` via `server/services/store.ts`. The JSON store mirrors the schema concepts and can be swapped for Prisma repositories later.
+The app currently persists data using:
+
+```text
+server/data/store.json
+```
+
+through `server/services/store.ts`.
 
 ## API Routes
 
-- `GET /api/health` — API health check.
-- `POST /api/auth/register` — create a persistent student/parent account.
-- `POST /api/auth/login` — authenticate a saved account.
-- `POST /api/learning/resources` — build a dynamic search query and return ranked resources.
-- `POST /api/learning/quiz` — gather resources and generate 5 MCQs + 5 short-answer questions.
-- `POST /api/learning/grade` — grade answers, save the attempt, generate report and update analytics.
-- `POST /api/learning/buddy` — contextual Study Buddy response.
-- `GET /api/analytics` — saved student dashboard snapshot.
-- `GET /api/analytics/parent-summary` — parent-facing summary and next steps.
+- `GET /api/health`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/learning/resources`
+- `POST /api/learning/quiz`
+- `POST /api/learning/grade`
+- `POST /api/learning/buddy`
+- `GET /api/analytics`
+- `GET /api/analytics/parent-summary`
 
 ## Dynamic Workflow
 
 1. Student submits grade, board, subject, topic, and difficulty.
-2. `resourceService` creates a search query such as `CBSE Grade 7 Science cell structure beginner explanation`.
-3. The service fetches public summaries and builds targeted educational links.
-4. The service extracts key concepts, summarizes for grade level, and ranks resources.
-5. `quizService` generates 10 questions from the returned resource text and concepts.
-6. `gradingService` grades MCQs exactly and short answers semantically.
-7. `recommendationEngine` creates next readings and checklist improvements from weak concepts.
-8. `store` persists attempts, resource history, topic mastery, and plans.
-9. `analyticsService` rebuilds dashboard charts from saved history.
+2. `resourceService` creates a dynamic educational search query.
+3. Public educational resources are fetched and ranked.
+4. Key concepts are extracted and summarized.
+5. `quizService` generates 5 MCQs and 5 short-answer questions.
+6. `gradingService` evaluates answers semantically.
+7. `recommendationEngine` creates personalized improvement plans.
+8. Attempts and mastery are persisted.
+9. `analyticsService` rebuilds dashboards from saved history.
 
 ## Setup
 
 1. Install dependencies:
 
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
 2. Create environment file:
 
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+cp .env.example .env
+```
 
-3. Start the full-stack development app:
+3. Generate Prisma client and migrations if needed:
 
-   ```bash
-   npm run dev
-   ```
+```bash
+npm run db:generate
+npm run db:migrate
+```
 
-4. Open the Vite URL shown in the terminal, usually `http://localhost:5173`.
+4. Start the app:
+
+```bash
+npm run dev
+```
+
+5. Open:
+
+```text
+http://localhost:5173
+```
 
 ## Environment Variables
 
@@ -115,25 +138,37 @@ JSON_STORE_PATH="server/data/store.json"
 JWT_SECRET="replace-with-a-long-random-secret"
 OPENAI_API_KEY="optional-enable-real-ai-generation"
 OPENAI_MODEL="gpt-4o-mini"
+RESOURCE_SEARCH_PROVIDER="curated"
 ```
 
-`OPENAI_API_KEY` is optional. When present, StudySpark uses AI for resource summarization, quiz generation, and short-answer grading. Without it, StudySpark still behaves dynamically by using public resource text, extracted concepts, and semantic scoring.
+`OPENAI_API_KEY` is optional. Without it, the app still dynamically generates quizzes and grading using fetched educational resources and semantic scoring.
 
 ## Deployment
 
 ### Frontend
 
-Deploy the Vite app to Vercel, Netlify, Cloudflare Pages, or any static host:
-
 ```bash
 npm run build
 ```
 
-Set `VITE_API_URL` to the deployed API URL.
+Deploy to:
+- Vercel
+- Netlify
+- Cloudflare Pages
+
+Set:
+
+```bash
+VITE_API_URL=<your-backend-url>
+```
 
 ### Backend
 
-Deploy the Express API to Render, Fly.io, Railway, Heroku, or a container platform. For production, replace the JSON store with Prisma repositories backed by PostgreSQL and set `DATABASE_URL` accordingly.
+Deploy to:
+- Render
+- Railway
+- Fly.io
+- Heroku
 
 Recommended production variables:
 
@@ -144,3 +179,12 @@ JWT_SECRET=long-random-secret
 OPENAI_API_KEY=sk-...
 OPENAI_MODEL=gpt-4o-mini
 ```
+
+## Notes on Safety and Personalization
+
+The AI system is designed to:
+- use child-friendly explanations
+- adapt difficulty by grade
+- provide safe encouragement
+- evaluate concepts instead of exact wording
+- keep services modular for future AI provider upgrades

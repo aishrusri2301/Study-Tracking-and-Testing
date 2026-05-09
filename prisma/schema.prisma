@@ -16,6 +16,7 @@ model User {
   grade              String?
   board              String?
   createdAt          DateTime            @default(now())
+
   quizzes            QuizAttempt[]
   topicsStudied      TopicStudied[]
   subjectPerformance SubjectPerformance[]
@@ -23,6 +24,8 @@ model User {
   evaluations        AiEvaluation[]
   resourceHistory    ResourceHistory[]
   improvementPlans   ImprovementPlan[]
+  favorites          FavoriteResource[]
+  checklist          ImprovementItem[]
 }
 
 model TopicStudied {
@@ -35,6 +38,7 @@ model TopicStudied {
   mastery   Int
   attempts  Int      @default(0)
   updatedAt DateTime @updatedAt
+
   user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, subject, topic])
@@ -50,6 +54,7 @@ model SubjectPerformance {
   strongestTopics String
   weakestTopics   String
   updatedAt       DateTime @updatedAt
+
   user            User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, subject])
@@ -66,6 +71,7 @@ model GeneratedQuiz {
   resourcesJson String
   questionsJson String
   createdAt     DateTime      @default(now())
+
   user          User          @relation(fields: [userId], references: [id])
   attempts      QuizAttempt[]
 }
@@ -86,6 +92,7 @@ model QuizAttempt {
   evaluationsJson     String
   resourcesJson       String
   createdAt           DateTime       @default(now())
+
   user                User           @relation(fields: [userId], references: [id])
   generatedQuiz       GeneratedQuiz? @relation(fields: [generatedQuizId], references: [id])
 }
@@ -101,6 +108,7 @@ model AiEvaluation {
   weaknesses      String
   recommendations String
   createdAt       DateTime @default(now())
+
   user            User     @relation(fields: [userId], references: [id])
 }
 
@@ -114,6 +122,7 @@ model ResourceHistory {
   searchQuery   String
   resourcesJson String
   createdAt     DateTime @default(now())
+
   user          User     @relation(fields: [userId], references: [id])
 }
 
@@ -124,6 +133,7 @@ model ImprovementPlan {
   topic         String
   itemsJson     String
   createdAt     DateTime @default(now())
+
   user          User     @relation(fields: [userId], references: [id])
 }
 
@@ -135,6 +145,19 @@ model FavoriteResource {
   type      String
   provider  String
   createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model ImprovementItem {
+  id        String   @id @default(cuid())
+  userId    String
+  text      String
+  category  String
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 enum Role {

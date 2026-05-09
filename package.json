@@ -11,11 +11,13 @@
     "preview": "vite preview --host 0.0.0.0",
     "start": "tsx server/index.ts",
     "typecheck": "tsc --noEmit",
+    "lint": "node --check server/index.ts",
     "test": "vitest run",
     "db:generate": "echo Prisma schema is available in prisma/schema.prisma",
     "db:migrate": "echo Configure Prisma CLI in deployment environment, then run prisma migrate dev"
   },
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "concurrently": "^9.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
