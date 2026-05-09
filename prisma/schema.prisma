@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  passwordHash       String
+  name               String
+  role               Role                @default(STUDENT)
+  grade              String?
+  board              String?
+  createdAt          DateTime            @default(now())
+  quizzes            QuizAttempt[]
+  topicsStudied      TopicStudied[]
+  subjectPerformance SubjectPerformance[]
+  generatedQuizzes   GeneratedQuiz[]
+  evaluations        AiEvaluation[]
+  resourceHistory    ResourceHistory[]
+  improvementPlans   ImprovementPlan[]
+}
+
+model TopicStudied {
+  id        String   @id @default(cuid())
+  userId    String
+  subject   String
+  board     String
+  grade     String
+  topic     String
+  mastery   Int
+  attempts  Int      @default(0)
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, subject, topic])
+}
+
+model SubjectPerformance {
+  id              String   @id @default(cuid())
+  userId          String
+  subject         String
+  averageScore    Int
+  averageMastery  Int
+  attempts        Int      @default(0)
+  strongestTopics String
+  weakestTopics   String
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, subject])
+}
+
+model GeneratedQuiz {
+  id            String        @id @default(cuid())
+  userId        String
+  grade         String
+  board         String
+  subject       String
+  topic         String
+  difficulty    String
+  resourcesJson String
+  questionsJson String
+  createdAt     DateTime      @default(now())
+  user          User          @relation(fields: [userId], references: [id])
+  attempts      QuizAttempt[]
+}
+
+model QuizAttempt {
+  id                  String         @id @default(cuid())
+  userId              String
+  generatedQuizId     String?
+  subject             String
+  topic               String
+  board               String
+  grade               String
+  score               Int
+  mastery             Int
+  averageResponseTime Int
+  questionsJson       String
+  answersJson         String
+  evaluationsJson     String
+  resourcesJson       String
+  createdAt           DateTime       @default(now())
+  user                User           @relation(fields: [userId], references: [id])
+  generatedQuiz       GeneratedQuiz? @relation(fields: [generatedQuizId], references: [id])
+}
+
+model AiEvaluation {
+  id              String   @id @default(cuid())
+  userId          String
+  quizAttemptId   String
+  topic           String
+  overallScore    Int
+  conceptMastery  String
+  strengths       String
+  weaknesses      String
+  recommendations String
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model ResourceHistory {
+  id            String   @id @default(cuid())
+  userId        String
+  grade         String
+  board         String
+  subject       String
+  topic         String
+  searchQuery   String
+  resourcesJson String
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model ImprovementPlan {
+  id            String   @id @default(cuid())
+  userId        String
+  quizAttemptId String
+  topic         String
+  itemsJson     String
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id])
+}
+
+model FavoriteResource {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  url       String
+  type      String
+  provider  String
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  STUDENT
+  PARENT
+  ADMIN
+}
