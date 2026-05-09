@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String        @id @default(cuid())
+  email        String        @unique
+  passwordHash String
+  name         String
+  role         Role          @default(STUDENT)
+  grade        String?
+  board        String?
+  createdAt    DateTime      @default(now())
+  quizzes      QuizAttempt[]
+  favorites    FavoriteResource[]
+  checklist    ImprovementItem[]
+}
+
+model QuizAttempt {
+  id              String   @id @default(cuid())
+  userId          String
+  subject         String
+  topic           String
+  board           String
+  grade           String
+  score           Int
+  mastery         Int
+  averageResponse Int
+  questionsJson   String
+  answersJson     String
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
+}
+
+model FavoriteResource {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  url       String
+  type      String
+  provider  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model ImprovementItem {
+  id        String   @id @default(cuid())
+  userId    String
+  text      String
+  category  String
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+enum Role {
+  STUDENT
+  PARENT
+  ADMIN
+}
