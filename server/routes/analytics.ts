@@ -1,11 +1,53 @@
 import { Router } from 'express';
-import { analytics } from '../../src/data/sampleData';
+
+import { getUserId } from '../middleware/auth';
+import { buildAnalytics } from '../services/analyticsService';
+import { readStore } from '../services/store';
 
 export const analyticsRouter = Router();
-analyticsRouter.get('/', (_req, res) => res.json(analytics));
-analyticsRouter.get('/parent-summary', (_req, res) => res.json({
-  learner: 'Mia',
-  summary: 'Mia is on a 9-day improvement streak and is strongest in English and Science. Fractions and map skills need short daily practice.',
-  wins: ['Completed 3 quizzes this week', 'Improved Science mastery by 6%', 'Earned Diagram Hero badge'],
-  nextSteps: ['Read one science note together', 'Practice 10 minutes of fractions', 'Print the weekly report card']
-}));
+
+analyticsRouter.get('/', async (req, res, next) => {
+  try {
+    const analytics = await buildAnalytics(getUserId(req));
+
+    res.json(analytics);
+  } catch (error) {
+    next(error);
+  }
+});
+
+analyticsRouter.get('/parent-summary', async (req, res, next) => {
+  try {
+    const userId = getUserId(req);
+
+    const analytics = await buildAnalytics(userId);
+
+    const store = await readStore();
+
+    const recentPlan = store.improvementPlans
+      .filter((plan) => plan.userId === userId)
+      .slice(-1)[0];
+
+    res.json({
+      learner: analytics.studentName || 'Student',
+
+      summary: analytics.totalQuizzes
+        ? `The learner has completed ${analytics.totalQuizzes} quizzes with ${analytics.accuracy}% average accuracy. Strongest subjects: ${
+            analytics.strongestSubjects.join(', ') || 'not enough data yet'
+          }. Focus areas: ${
+            analytics.weakTopics.join(', ') ||
+            'keep practicing new topics'
+          }.`
+        : 'No quiz attempts have been completed yet. Start a topic quiz to generate a parent progress summary.',
+
+      wins: analytics.badges || [],
+
+      nextSteps:
+        recentPlan?.items?.map((item: any) => item.text) || [],
+
+      analytics,
+    });
+  } catch (error) {
+    next(error);
+  }
+});

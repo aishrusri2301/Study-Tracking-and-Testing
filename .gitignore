@@ -6,3 +6,4 @@ dist-server
 *.db-journal
 .DS_Store
 coverage
+server/data/store.json

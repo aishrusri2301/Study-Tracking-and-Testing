@@ -10,6 +10,7 @@
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "start": "tsx server/index.ts",
+    "typecheck": "tsc --noEmit",
     "lint": "node --check server/index.ts",
     "test": "vitest run",
     "db:generate": "echo Prisma schema is available in prisma/schema.prisma",
@@ -33,5 +34,13 @@
     "vite": "^6.0.5",
     "vitest": "^2.1.8",
     "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.10.2",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5"
   }
 }
